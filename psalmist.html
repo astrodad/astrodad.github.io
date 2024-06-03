@@ -108,7 +108,7 @@
             const date = new Date(dateInput);
             const formattedDate = `${('0' + (date.getMonth() + 1)).slice(-2)}${('0' + date.getDate()).slice(-2)}${date.getFullYear().toString().slice(-2)}`;
             const usccbUrl = `https://bible.usccb.org/bible/readings/${formattedDate}.cfm`;
-            const proxyUrl = 'https://corsproxy.in/';
+            const proxyUrl = 'https://corsproxy.io/?';
 
             try {
                 const response = await fetch(proxyUrl + encodeURIComponent(usccbUrl), {
