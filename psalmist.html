@@ -107,11 +107,11 @@
 
             const date = new Date(dateInput);
             const formattedDate = `${('0' + (date.getMonth() + 1)).slice(-2)}${('0' + date.getDate()).slice(-2)}${date.getFullYear().toString().slice(-2)}`;
-            const url = `https://bible.usccb.org/bible/readings/${formattedDate}.cfm`;
-            const proxyUrl = 'https://crossorigin.me/';
+            const usccbUrl = `https://bible.usccb.org/bible/readings/${formattedDate}.cfm`;
+            const proxyUrl = 'https://corsproxy.in/';
 
             try {
-                const response = await fetch(proxyUrl + url, {
+                const response = await fetch(proxyUrl + encodeURIComponent(usccbUrl), {
                     headers: {
                         'Origin': 'https://astrodad.github.io'
                     }
