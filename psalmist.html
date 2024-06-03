@@ -22,14 +22,9 @@
             margin-bottom: 20px;
         }
 
-        label, input, button {
+        input[type="date"], button {
             font-size: 1rem;
             margin: 10px 0;
-        }
-
-        label {
-            display: block;
-            color: #555;
         }
 
         input[type="date"] {
@@ -53,6 +48,17 @@
 
         button:hover {
             background-color: #0056b3;
+        }
+
+        a {
+            margin-top: 10px;
+            color: #007BFF;
+            text-decoration: none;
+            display: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
         }
 
         h2 {
@@ -90,9 +96,9 @@
 </head>
 <body>
     <h1>USCCB Psalm Extractor</h1>
-    <label for="date">Enter Date (YYYY-MM-DD):</label>
     <input type="date" id="date">
     <button onclick="fetchPsalm()">Get Psalm</button>
+    <a id="usccb-link" href="#" target="_blank">Read full text on USCCB</a>
     <h2>Extracted Psalm</h2>
     <pre id="psalm-output"></pre>
     <button class="copy-btn" onclick="copyPsalm()">Copy to Clipboard</button>
@@ -100,12 +106,16 @@
     <script>
         async function fetchPsalm() {
             const dateInput = document.getElementById('date').value;
+            const link = document.getElementById('usccb-link');
+            link.style.display = 'none';
+
             if (!dateInput) {
                 alert("Please enter a valid date.");
                 return;
             }
 
             const date = new Date(dateInput);
+            date.setDate(date.getDate() + 1); // Adjust for the one-day offset
             const formattedDate = `${('0' + (date.getMonth() + 1)).slice(-2)}${('0' + date.getDate()).slice(-2)}${date.getFullYear().toString().slice(-2)}`;
             const usccbUrl = `https://bible.usccb.org/bible/readings/${formattedDate}.cfm`;
             const proxyUrl = 'https://corsproxy.io/?';
@@ -123,17 +133,74 @@
                 const doc = parser.parseFromString(text, 'text/html');
 
                 // Find the psalm section
-                const psalmHeader = doc.querySelector('h3.name');
+                const psalmHeader = Array.from(doc.querySelectorAll('h3.name')).find(h3 => h3.textContent.includes('Responsorial Psalm') || h3.textContent.includes('Responsorial'));
                 let psalmText = 'Psalm not found. Please check the date and try again.';
 
-                if (psalmHeader && psalmHeader.textContent.includes('Responsorial Psalm')) {
-                    const psalmDiv = psalmHeader.nextElementSibling;
-                    if (psalmDiv && psalmDiv.classList.contains('content-body')) {
-                        psalmText = Array.from(psalmDiv.querySelectorAll('p')).map(p => p.textContent.trim()).join('\n');
+                if (psalmHeader) {
+                    const psalmAddressDiv = psalmHeader.nextElementSibling;
+                    const psalmContentDiv = psalmHeader.parentElement.nextElementSibling;
+
+                    if (psalmAddressDiv && psalmAddressDiv.classList.contains('address') && psalmContentDiv && psalmContentDiv.classList.contains('content-body')) {
+                        const psalmReference = psalmAddressDiv.textContent.trim();
+                        let refrain = '';
+                        let verses = [];
+                        let verseCount = 1;
+                        let skipNextLine = false;
+                        let refrainFound = false;
+                        let currentVerseLines = [];
+                        let inVerse = false;
+
+                        const nodes = Array.from(psalmContentDiv.childNodes);
+
+                        nodes.forEach(node => {
+                            if (node.nodeName === "BR") {
+                                // Ignore <br> tags
+                            } else if (node.nodeType === Node.TEXT_NODE || node.nodeName === "STRONG" || node.nodeName === "P") {
+                                let text = node.textContent.trim();
+                                if (skipNextLine) {
+                                    skipNextLine = false;
+                                    return; // Skip the alternate refrain
+                                }
+                                if (text.toLowerCase() === "or:") {
+                                    skipNextLine = true;
+                                    return; // Remove "Or:" lines
+                                }
+                                if (text.startsWith("R.")) {
+                                    return; // Remove lines that start with "R."
+                                }
+                                if (node.nodeName === "STRONG") {
+                                    if (!refrainFound) {
+                                        refrain = text; // First <strong> is the refrain
+                                        refrainFound = true;
+                                    } else if (text === refrain || text.toLowerCase() === "alleluia") {
+                                        return; // Remove repeated refrains
+                                    } else {
+                                        // Save the current verse and start a new one
+                                        if (currentVerseLines.length > 0) {
+                                            verses.push(`Verse ${verseCount}:\n${currentVerseLines.join('\n')}`);
+                                            verseCount++;
+                                            currentVerseLines = [];
+                                        }
+                                    }
+                                }
+                                if (refrainFound && text !== '' && text !== refrain) {
+                                    currentVerseLines.push(text);
+                                }
+                            }
+                        });
+
+                        // Add the last verse if it exists
+                        if (currentVerseLines.length > 0) {
+                            verses.push(`Verse ${verseCount}:\n${currentVerseLines.join('\n')}`);
+                        }
+
+                        psalmText = `Refrain: ${refrain}\n\n${verses.join('\n\n')}`;
                     }
                 }
 
                 document.getElementById('psalm-output').textContent = psalmText;
+                link.href = usccbUrl;
+                link.style.display = 'block';
             } catch (error) {
                 console.error('Error fetching the psalm:', error);
                 document.getElementById('psalm-output').textContent = 'Error fetching the psalm. Please try again later.';
