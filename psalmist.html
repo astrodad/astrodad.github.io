@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USCCB Psalm Extractor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        label, input, button {
+            font-size: 1rem;
+            margin: 10px 0;
+        }
+
+        label {
+            display: block;
+            color: #555;
+        }
+
+        input[type="date"] {
+            padding: 10px;
+            width: 100%;
+            max-width: 300px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 10px 20px;
+            color: #fff;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        h2 {
+            color: #333;
+            margin-top: 20px;
+        }
+
+        pre {
+            background-color: #fff;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 100%;
+            max-width: 600px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            box-sizing: border-box;
+        }
+
+        .copy-btn {
+            background-color: #28a745;
+            margin-top: 10px;
+        }
+
+        .copy-btn:hover {
+            background-color: #218838;
+        }
+
+        @media (max-width: 600px) {
+            input[type="date"], pre {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>USCCB Psalm Extractor</h1>
+    <label for="date">Enter Date (YYYY-MM-DD):</label>
+    <input type="date" id="date">
+    <button onclick="fetchPsalm()">Get Psalm</button>
+    <h2>Extracted Psalm</h2>
+    <pre id="psalm-output"></pre>
+    <button class="copy-btn" onclick="copyPsalm()">Copy to Clipboard</button>
+
+    <script>
+        async function fetchPsalm() {
+            const dateInput = document.getElementById('date').value;
+            if (!dateInput) {
+                alert("Please enter a valid date.");
+                return;
+            }
+
+            const date = new Date(dateInput);
+            const formattedDate = `${('0' + (date.getMonth() + 1)).slice(-2)}${('0' + date.getDate()).slice(-2)}${date.getFullYear().toString().slice(-2)}`;
+            const url = `https://bible.usccb.org/bible/readings/${formattedDate}.cfm`;
+            const proxyUrl = 'https://crossorigin.me/';
+
+            try {
+                const response = await fetch(proxyUrl + url, {
+                    headers: {
+                        'Origin': 'https://astrodad.github.io'
+                    }
+                });
+                const text = await response.text();
+
+                // Parse the HTML response
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(text, 'text/html');
+
+                // Find the psalm section
+                const psalmHeader = doc.querySelector('h3.name');
+                let psalmText = 'Psalm not found. Please check the date and try again.';
+
+                if (psalmHeader && psalmHeader.textContent.includes('Responsorial Psalm')) {
+                    const psalmDiv = psalmHeader.nextElementSibling;
+                    if (psalmDiv && psalmDiv.classList.contains('content-body')) {
+                        psalmText = Array.from(psalmDiv.querySelectorAll('p')).map(p => p.textContent.trim()).join('\n');
+                    }
+                }
+
+                document.getElementById('psalm-output').textContent = psalmText;
+            } catch (error) {
+                console.error('Error fetching the psalm:', error);
+                document.getElementById('psalm-output').textContent = 'Error fetching the psalm. Please try again later.';
+            }
+        }
+
+        function copyPsalm() {
+            const psalmOutput = document.getElementById('psalm-output').textContent;
+            if (psalmOutput) {
+                navigator.clipboard.writeText(psalmOutput).then(() => {
+                    alert('Psalm copied to clipboard!');
+                }, (err) => {
+                    console.error('Error copying text: ', err);
+                });
+            } else {
+                alert('No psalm text to copy.');
+            }
+        }
+    </script>
+</body>
+</html>
