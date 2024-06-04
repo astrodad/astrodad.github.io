@@ -148,14 +148,15 @@
                         let skipNextLine = false;
                         let refrainFound = false;
                         let currentVerseLines = [];
-                        let inVerse = false;
 
                         const nodes = Array.from(psalmContentDiv.childNodes);
 
                         nodes.forEach(node => {
                             if (node.nodeName === "BR") {
-                                // Ignore <br> tags
-                            } else if (node.nodeType === Node.TEXT_NODE || node.nodeName === "STRONG" || node.nodeName === "P") {
+                                // End of line; continue to next line
+                                return;
+
+                            } else if (node.nodeType === Node.TEXT_NODE || node.nodeName === "STRONG") {
                                 let text = node.textContent.trim();
                                 if (skipNextLine) {
                                     skipNextLine = false;
@@ -166,31 +167,87 @@
                                     return; // Remove "Or:" lines
                                 }
                                 if (text.startsWith("R.")) {
-                                    return; // Remove lines that start with "R."
+                                    return;
                                 }
+                                if (text.toLowerCase() === "alleluia.") {
+                                    return;
+                                }
+
                                 if (node.nodeName === "STRONG") {
                                     if (!refrainFound) {
                                         refrain = text; // First <strong> is the refrain
                                         refrainFound = true;
-                                    } else if (text === refrain || text.toLowerCase() === "alleluia") {
-                                        return; // Remove repeated refrains
-                                    } else {
-                                        // Save the current verse and start a new one
+                                    } else if (text === refrain) {
+
+
                                         if (currentVerseLines.length > 0) {
+                                        verses.push(`Verse ${verseCount}:\n${currentVerseLines.join('\n')}`);
+                                        verseCount++;
+                                        currentVerseLines = [];
+                                        }
+                                        return; // Remove repeated refrains
+                                    } 
+                                }
+                                if (refrainFound && (text !== refrain)) {
+                                    currentVerseLines.push(text);
+                                }
+
+                            } else if (node.nodeType === Node.ELEMENT_NODE && node.nodeName === "P") {
+                                //start processing this node
+
+                                const pNodes = Array.from(node.childNodes);
+                                pNodes.forEach(node => {
+                                
+                                 
+                                if (node.nodeName === "BR") {
+                                    // End of line; continue to next line
+                                    return;
+                                } else if (node.nodeType === Node.TEXT_NODE || node.nodeName === "STRONG" || node.nodeName === "P") {
+                                
+                                    let text = node.textContent.trim();
+                                    if (skipNextLine) {
+                                        skipNextLine = false;
+                                        return; // Skip the alternate refrain
+                                    }
+                                    if (text.toLowerCase() === "or:") {
+                                        skipNextLine = true;
+                                        return; // Remove "Or:" lines
+                                    }
+                                    if (text.startsWith("R.")) {
+                                        return;
+                                    }
+                                    if (text.toLowerCase() === "alleluia.") {
+                                        return;
+                                    }
+
+                                    if (node.nodeName === "STRONG") {
+                                        if (!refrainFound) {
+                                            refrain = text; // First <strong> is the refrain
+                                            refrainFound = true;
+                                        } else if (text === refrain) {
+
+
+                                            if (currentVerseLines.length > 0) {
                                             verses.push(`Verse ${verseCount}:\n${currentVerseLines.join('\n')}`);
                                             verseCount++;
                                             currentVerseLines = [];
-                                        }
+                                            }
+                                            return; // Remove repeated refrains
+                                        } 
                                     }
+                                    if (refrainFound && (text !== refrain)) {
+                                        currentVerseLines.push(text);
+                                    }
+
                                 }
-                                if (refrainFound && text !== '' && text !== refrain) {
-                                    currentVerseLines.push(text);
-                                }
+
+                                });
+
                             }
                         });
 
                         // Add the last verse if it exists
-                        if (currentVerseLines.length > 0) {
+                        if (currentVerseLines.length > 1) {
                             verses.push(`Verse ${verseCount}:\n${currentVerseLines.join('\n')}`);
                         }
 
