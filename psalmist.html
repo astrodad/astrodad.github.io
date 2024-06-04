@@ -105,7 +105,7 @@
 
     <script>
         async function fetchPsalm() {
-            const dateInput = document.getElementById('date').value;
+            const dateInput = document.getElementById('date');
             const link = document.getElementById('usccb-link');
             link.style.display = 'none';
 
@@ -114,8 +114,9 @@
                 return;
             }
 
-            const date = new Date(dateInput);
-            date.setDate(date.getDate() + 1); // Adjust for the one-day offset
+
+            var [year, month, day] = dateInput.value.split('-');
+            const date = new Date(year, month - 1, day); // month is 0-based in JavaScript Date
             const formattedDate = `${('0' + (date.getMonth() + 1)).slice(-2)}${('0' + date.getDate()).slice(-2)}${date.getFullYear().toString().slice(-2)}`;
             const usccbUrl = `https://bible.usccb.org/bible/readings/${formattedDate}.cfm`;
             const proxyUrl = 'https://corsproxy.io/?';
