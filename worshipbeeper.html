@@ -55,24 +55,20 @@
         .menu {
             position: absolute;
             top: 10px;
+            right: 10px;
             display: flex;
-            justify-content: space-between;
-            width: calc(100% - 20px);
-            padding: 0 10px;
-            box-sizing: border-box;
+            flex-direction: column;
+            align-items: flex-end;
         }
         .menu input, .menu button {
             margin: 5px;
         }
-        .hamburger, .gear {
+        .hamburger {
             font-size: 30px;
             cursor: pointer;
         }
         .hidden {
             display: none;
-        }
-        .edit-mode {
-            color: red;
         }
     </style>
 </head>
@@ -83,23 +79,22 @@
             <input type="text" id="webhookUrl" placeholder="Enter Webhook URL">
             <button onclick="saveWebhookUrl()">Save</button>
         </div>
-        <div class="gear" onclick="toggleEditMode()">⚙</div>
     </div>
     <div class="grid-container" id="gridContainer">
-        <button onclick="sendMessage('Repeat Chorus')" class="inactive" draggable="true" ondragstart="drag(event)">Repeat Chorus</button>
-        <button onclick="sendMessage('Lower Dynamic')" class="inactive" draggable="true" ondragstart="drag(event)">Lower Dynamic</button>
-        <button onclick="sendMessage('Increase Tempo')" class="inactive" draggable="true" ondragstart="drag(event)">Increase Tempo</button>
-        <button onclick="sendMessage('Bridge')" class="inactive" draggable="true" ondragstart="drag(event)">Bridge</button>
-        <button onclick="sendMessage('Verse 1')" class="inactive" draggable="true" ondragstart="drag(event)">Verse 1</button>
-        <button onclick="sendMessage('Verse 2')" class="inactive" draggable="true" ondragstart="drag(event)">Verse 2</button>
-        <button onclick="sendMessage('Chorus')" class="inactive" draggable="true" ondragstart="drag(event)">Chorus</button>
-        <button onclick="sendMessage('Instrumental')" class="inactive" draggable="true" ondragstart="drag(event)">Instrumental</button>
-        <button onclick="sendMessage('Outro')" class="inactive" draggable="true" ondragstart="drag(event)">Outro</button>
+        <button onclick="sendMessage('Repeat Chorus')" class="inactive" onmousedown="startLongPress(event)">Repeat Chorus</button>
+        <button onclick="sendMessage('Lower Dynamic')" class="inactive" onmousedown="startLongPress(event)">Lower Dynamic</button>
+        <button onclick="sendMessage('Increase Tempo')" class="inactive" onmousedown="startLongPress(event)">Increase Tempo</button>
+        <button onclick="sendMessage('Bridge')" class="inactive" onmousedown="startLongPress(event)">Bridge</button>
+        <button onclick="sendMessage('Verse 1')" class="inactive" onmousedown="startLongPress(event)">Verse 1</button>
+        <button onclick="sendMessage('Verse 2')" class="inactive" onmousedown="startLongPress(event)">Verse 2</button>
+        <button onclick="sendMessage('Chorus')" class="inactive" onmousedown="startLongPress(event)">Chorus</button>
+        <button onclick="sendMessage('Instrumental')" class="inactive" onmousedown="startLongPress(event)">Instrumental</button>
+        <button onclick="sendMessage('Outro')" class="inactive" onmousedown="startLongPress(event)">Outro</button>
     </div>
 
     <script>
         let webhookUrl = '';
-        let editMode = false;
+        let timer;
 
         function toggleMenu() {
             const menuContent = document.getElementById('menuContent');
@@ -136,12 +131,15 @@
             });
         }
 
-        function toggleEditMode() {
-            editMode = !editMode;
-            const gear = document.querySelector('.gear');
-            gear.classList.toggle('edit-mode');
+        function startLongPress(event) {
+            timer = setTimeout(() => enableDrag(event), 2000);
+            event.target.onmouseup = () => clearTimeout(timer);
+            event.target.onmouseleave = () => clearTimeout(timer);
+        }
+
+        function enableDrag(event) {
             const buttons = document.querySelectorAll('.grid-container button');
-            buttons.forEach(button => button.setAttribute('draggable', editMode));
+            buttons.forEach(button => button.setAttribute('draggable', true));
         }
 
         let dragged;
@@ -151,6 +149,12 @@
             event.target.classList.add('dragging');
             setTimeout(() => event.target.classList.remove('dragging'), 0);
         }
+
+        document.addEventListener('dragstart', function(event) {
+            if (event.target.classList.contains('active')) {
+                drag(event);
+            }
+        });
 
         document.addEventListener('dragover', function(event) {
             event.preventDefault();
