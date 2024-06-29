@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worship Team Commands</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-gap: 10px;
+            width: 100%;
+            max-width: 600px;
+            padding: 10px;
+        }
+        .grid-container button {
+            padding: 20px;
+            font-size: 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            background-color: #eee;
+            color: #aaa;
+        }
+        .grid-container button.active {
+            background-color: #008CBA;
+            color: white;
+        }
+        .grid-container button:hover.active {
+            background-color: #005f6a;
+        }
+        .grid-container button:active.active {
+            background-color: #004a50;
+        }
+        .menu {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        .menu input, .menu button {
+            margin: 5px;
+        }
+        .hamburger {
+            font-size: 30px;
+            cursor: pointer;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="menu">
+        <div class="hamburger" onclick="toggleMenu()">☰</div>
+        <div id="menuContent" class="hidden">
+            <input type="text" id="webhookUrl" placeholder="Enter Webhook URL">
+            <button onclick="saveWebhookUrl()">Save</button>
+        </div>
+    </div>
+    <div class="grid-container">
+        <button onclick="sendMessage('Repeat Chorus')" class="inactive">Repeat Chorus</button>
+        <button onclick="sendMessage('Lower Dynamic')" class="inactive">Lower Dynamic</button>
+        <button onclick="sendMessage('Increase Tempo')" class="inactive">Increase Tempo</button>
+        <button onclick="sendMessage('Bridge')" class="inactive">Bridge</button>
+        <button onclick="sendMessage('Verse 1')" class="inactive">Verse 1</button>
+        <button onclick="sendMessage('Verse 2')" class="inactive">Verse 2</button>
+        <button onclick="sendMessage('Chorus')" class="inactive">Chorus</button>
+        <button onclick="sendMessage('Instrumental')" class="inactive">Instrumental</button>
+        <button onclick="sendMessage('Outro')" class="inactive">Outro</button>
+    </div>
+
+    <script>
+        let webhookUrl = '';
+
+        function toggleMenu() {
+            const menuContent = document.getElementById('menuContent');
+            menuContent.classList.toggle('hidden');
+        }
+
+        function saveWebhookUrl() {
+            webhookUrl = document.getElementById('webhookUrl').value;
+            const buttons = document.querySelectorAll('.grid-container button');
+            if (webhookUrl) {
+                buttons.forEach(button => button.classList.add('active'));
+                buttons.forEach(button => button.classList.remove('inactive'));
+            } else {
+                buttons.forEach(button => button.classList.remove('active'));
+                buttons.forEach(button => button.classList.add('inactive'));
+            }
+            toggleMenu();
+        }
+
+        function sendMessage(command) {
+            if (!webhookUrl) {
+                alert('Please set the webhook URL first.');
+                return;
+            }
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: 'CCASTA Worship Beeper',
+                    content: command
+                })
+            });
+        }
+    </script>
+</body>
+</html>
