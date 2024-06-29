@@ -82,20 +82,21 @@
         </div>
     </div>
     <div class="grid-container" id="gridContainer">
-        <button class="inactive" onmousedown="startLongPress(event)" ontouchstart="startLongPress(event)">Repeat Chorus</button>
-        <button class="inactive" onmousedown="startLongPress(event)" ontouchstart="startLongPress(event)">Lower Dynamic</button>
-        <button class="inactive" onmousedown="startLongPress(event)" ontouchstart="startLongPress(event)">Increase Tempo</button>
-        <button class="inactive" onmousedown="startLongPress(event)" ontouchstart="startLongPress(event)">Bridge</button>
-        <button class="inactive" onmousedown="startLongPress(event)" ontouchstart="startLongPress(event)">Verse 1</button>
-        <button class="inactive" onmousedown="startLongPress(event)" ontouchstart="startLongPress(event)">Verse 2</button>
-        <button class="inactive" onmousedown="startLongPress(event)" ontouchstart="startLongPress(event)">Chorus</button>
-        <button class="inactive" onmousedown="startLongPress(event)" ontouchstart="startLongPress(event)">Instrumental</button>
-        <button class="inactive" onmousedown="startLongPress(event)" ontouchstart="startLongPress(event)">Outro</button>
+        <button class="inactive" ontouchstart="startLongPress(event)" ontouchend="clearLongPress(event)" ontouchmove="clearLongPress(event)">Repeat Chorus</button>
+        <button class="inactive" ontouchstart="startLongPress(event)" ontouchend="clearLongPress(event)" ontouchmove="clearLongPress(event)">Lower Dynamic</button>
+        <button class="inactive" ontouchstart="startLongPress(event)" ontouchend="clearLongPress(event)" ontouchmove="clearLongPress(event)">Increase Tempo</button>
+        <button class="inactive" ontouchstart="startLongPress(event)" ontouchend="clearLongPress(event)" ontouchmove="clearLongPress(event)">Bridge</button>
+        <button class="inactive" ontouchstart="startLongPress(event)" ontouchend="clearLongPress(event)" ontouchmove="clearLongPress(event)">Verse 1</button>
+        <button class="inactive" ontouchstart="startLongPress(event)" ontouchend="clearLongPress(event)" ontouchmove="clearLongPress(event)">Verse 2</button>
+        <button class="inactive" ontouchstart="startLongPress(event)" ontouchend="clearLongPress(event)" ontouchmove="clearLongPress(event)">Chorus</button>
+        <button class="inactive" ontouchstart="startLongPress(event)" ontouchend="clearLongPress(event)" ontouchmove="clearLongPress(event)">Instrumental</button>
+        <button class="inactive" ontouchstart="startLongPress(event)" ontouchend="clearLongPress(event)" ontouchmove="clearLongPress(event)">Outro</button>
     </div>
 
     <script>
         let webhookUrl = '';
         let timer;
+        let dragged;
         let isDragging = false;
 
         function toggleMenu() {
@@ -138,33 +139,27 @@
             timer = setTimeout(() => {
                 enableDrag(event.target);
                 isDragging = true;
+                event.target.draggable = true;
+                event.target.classList.add('dragging');
             }, 2000);
-            event.target.addEventListener('mouseup', clearLongPress);
-            event.target.addEventListener('mouseleave', clearLongPress);
-            event.target.addEventListener('touchend', clearLongPress);
-            event.target.addEventListener('touchmove', clearLongPress);
         }
 
-        function clearLongPress() {
+        function clearLongPress(event) {
             clearTimeout(timer);
             if (isDragging) {
+                event.target.draggable = false;
+                event.target.classList.remove('dragging');
                 isDragging = false;
-                document.querySelectorAll('.grid-container button').forEach(button => {
-                    button.removeEventListener('mouseup', clearLongPress);
-                    button.removeEventListener('mouseleave', clearLongPress);
-                    button.removeEventListener('touchend', clearLongPress);
-                    button.removeEventListener('touchmove', clearLongPress);
-                });
             }
         }
 
         function enableDrag(button) {
             const buttons = document.querySelectorAll('.grid-container button');
-            buttons.forEach(btn => btn.setAttribute('draggable', true));
-            button.addEventListener('dragstart', drag);
+            buttons.forEach(btn => {
+                btn.setAttribute('draggable', true);
+                btn.ondragstart = drag;
+            });
         }
-
-        let dragged;
 
         function drag(event) {
             dragged = event.target;
