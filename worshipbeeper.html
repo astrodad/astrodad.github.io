@@ -38,6 +38,7 @@
             justify-content: center;
             align-items: center;
             text-align: center;
+            user-select: none;
         }
         .grid-container button.active {
             background-color: #008CBA;
@@ -81,15 +82,15 @@
         </div>
     </div>
     <div class="grid-container" id="gridContainer">
-        <button class="inactive" onmousedown="startLongPress(event)" onmouseup="clearLongPress()" onmouseleave="clearLongPress()" ontouchstart="startLongPress(event)" ontouchend="clearLongPress()">Repeat Chorus</button>
-        <button class="inactive" onmousedown="startLongPress(event)" onmouseup="clearLongPress()" onmouseleave="clearLongPress()" ontouchstart="startLongPress(event)" ontouchend="clearLongPress()">Lower Dynamic</button>
-        <button class="inactive" onmousedown="startLongPress(event)" onmouseup="clearLongPress()" onmouseleave="clearLongPress()" ontouchstart="startLongPress(event)" ontouchend="clearLongPress()">Increase Tempo</button>
-        <button class="inactive" onmousedown="startLongPress(event)" onmouseup="clearLongPress()" onmouseleave="clearLongPress()" ontouchstart="startLongPress(event)" ontouchend="clearLongPress()">Bridge</button>
-        <button class="inactive" onmousedown="startLongPress(event)" onmouseup="clearLongPress()" onmouseleave="clearLongPress()" ontouchstart="startLongPress(event)" ontouchend="clearLongPress()">Verse 1</button>
-        <button class="inactive" onmousedown="startLongPress(event)" onmouseup="clearLongPress()" onmouseleave="clearLongPress()" ontouchstart="startLongPress(event)" ontouchend="clearLongPress()">Verse 2</button>
-        <button class="inactive" onmousedown="startLongPress(event)" onmouseup="clearLongPress()" onmouseleave="clearLongPress()" ontouchstart="startLongPress(event)" ontouchend="clearLongPress()">Chorus</button>
-        <button class="inactive" onmousedown="startLongPress(event)" onmouseup="clearLongPress()" onmouseleave="clearLongPress()" ontouchstart="startLongPress(event)" ontouchend="clearLongPress()">Instrumental</button>
-        <button class="inactive" onmousedown="startLongPress(event)" onmouseup="clearLongPress()" onmouseleave="clearLongPress()" ontouchstart="startLongPress(event)" ontouchend="clearLongPress()">Outro</button>
+        <button class="inactive" onmousedown="startLongPress(event)" ontouchstart="startLongPress(event)">Repeat Chorus</button>
+        <button class="inactive" onmousedown="startLongPress(event)" ontouchstart="startLongPress(event)">Lower Dynamic</button>
+        <button class="inactive" onmousedown="startLongPress(event)" ontouchstart="startLongPress(event)">Increase Tempo</button>
+        <button class="inactive" onmousedown="startLongPress(event)" ontouchstart="startLongPress(event)">Bridge</button>
+        <button class="inactive" onmousedown="startLongPress(event)" ontouchstart="startLongPress(event)">Verse 1</button>
+        <button class="inactive" onmousedown="startLongPress(event)" ontouchstart="startLongPress(event)">Verse 2</button>
+        <button class="inactive" onmousedown="startLongPress(event)" ontouchstart="startLongPress(event)">Chorus</button>
+        <button class="inactive" onmousedown="startLongPress(event)" ontouchstart="startLongPress(event)">Instrumental</button>
+        <button class="inactive" onmousedown="startLongPress(event)" ontouchstart="startLongPress(event)">Outro</button>
     </div>
 
     <script>
@@ -133,11 +134,14 @@
         }
 
         function startLongPress(event) {
+            event.preventDefault();
             timer = setTimeout(() => {
-                enableDrag(event);
+                enableDrag(event.target);
                 isDragging = true;
             }, 2000);
-            event.target.addEventListener('mousemove', clearLongPress);
+            event.target.addEventListener('mouseup', clearLongPress);
+            event.target.addEventListener('mouseleave', clearLongPress);
+            event.target.addEventListener('touchend', clearLongPress);
             event.target.addEventListener('touchmove', clearLongPress);
         }
 
@@ -146,18 +150,18 @@
             if (isDragging) {
                 isDragging = false;
                 document.querySelectorAll('.grid-container button').forEach(button => {
-                    button.removeEventListener('mousemove', clearLongPress);
+                    button.removeEventListener('mouseup', clearLongPress);
+                    button.removeEventListener('mouseleave', clearLongPress);
+                    button.removeEventListener('touchend', clearLongPress);
                     button.removeEventListener('touchmove', clearLongPress);
                 });
             }
         }
 
-        function enableDrag(event) {
+        function enableDrag(button) {
             const buttons = document.querySelectorAll('.grid-container button');
-            buttons.forEach(button => {
-                button.setAttribute('draggable', true);
-                button.ondragstart = drag;
-            });
+            buttons.forEach(btn => btn.setAttribute('draggable', true));
+            button.addEventListener('dragstart', drag);
         }
 
         let dragged;
